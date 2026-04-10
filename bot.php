@@ -1,52 +1,25 @@
 <?php
 
-/*
-================================
-Secret Locker Telegram Bot
-================================
-*/
-
 require_once "config.php";
 require_once "database.php";
 require_once "functions.php";
 
-
-/*
-================================
-Get Telegram Update
-================================
-*/
-
 $content = file_get_contents("php://input");
 $update = json_decode($content, true);
-
-
-/*
-================================
-If opened from browser
-================================
-*/
 
 if(!$update){
     echo "Bot Running";
     exit;
 }
 
-
-/*
-================================
-Safe Variables
-================================
-*/
-
 $chatId = $update["message"]["chat"]["id"] ?? "";
 $message = $update["message"]["text"] ?? "";
 
 
 /*
-================================
-START COMMAND
-================================
+=====================
+START
+=====================
 */
 
 if($message == "/start"){
@@ -59,9 +32,9 @@ Send 4 digit PIN to create vault");
 
 
 /*
-================================
-PIN SET
-================================
+=====================
+SET PIN
+=====================
 */
 
 if(is_numeric($message) && strlen($message) == 4){
@@ -73,7 +46,7 @@ $result = mysqli_query($conn,$query);
 
 if(mysqli_num_rows($result) == 0){
 
-mysqli_query($conn,"INSERT INTO users (telegram_id,pin) VALUES ('$chatId','$pin')");
+mysqli_query($conn,"INSERT INTO users (telegram_id,pin,locked) VALUES ('$chatId','$pin','1')");
 
 sendMessage($chatId,"Vault Created 🔐
 
@@ -91,25 +64,62 @@ sendMessage($chatId,"PIN Updated 🔐");
 
 
 /*
-================================
-Unlock Command
-================================
+=====================
+UNLOCK
+=====================
 */
 
 if($message == "/unlock"){
 
-sendMessage($chatId,"Enter PIN");
+mysqli_query($conn,"UPDATE users SET locked='0' WHERE telegram_id='$chatId'");
+
+sendMessage($chatId,"Vault Unlocked 🔓");
 
 }
 
 
 /*
-================================
-Save Note
-================================
+=====================
+LOCK
+=====================
+*/
+
+if($message == "/lock"){
+
+mysqli_query($conn,"UPDATE users SET locked='1' WHERE telegram_id='$chatId'");
+
+sendMessage($chatId,"Vault Locked 🔐");
+
+}
+
+
+/*
+=====================
+CHECK LOCK
+=====================
+*/
+
+$user = mysqli_fetch_assoc(mysqli_query($conn,"SELECT * FROM users WHERE telegram_id='$chatId'"));
+
+$locked = $user['locked'] ?? 1;
+
+
+/*
+=====================
+SAVE NOTE
+=====================
 */
 
 if(strpos($message,"/note") === 0){
+
+if($locked == 1){
+
+sendMessage($chatId,"Vault Locked 🔐
+Use /unlock");
+
+exit;
+
+}
 
 $note = trim(str_replace("/note","",$message));
 
@@ -121,12 +131,19 @@ sendMessage($chatId,"Note Saved 🔐");
 
 
 /*
-================================
-Photo Upload
-================================
+=====================
+PHOTO
+=====================
 */
 
 if(isset($update["message"]["photo"])){
+
+if($locked == 1){
+
+sendMessage($chatId,"Vault Locked 🔐");
+exit;
+
+}
 
 $photo = $update["message"]["photo"];
 $file_id = end($photo)["file_id"];
@@ -140,12 +157,19 @@ sendMessage($chatId,"Photo Saved 🔐");
 
 
 /*
-================================
-Document Upload
-================================
+=====================
+FILE
+=====================
 */
 
 if(isset($update["message"]["document"])){
+
+if($locked == 1){
+
+sendMessage($chatId,"Vault Locked 🔐");
+exit;
+
+}
 
 $file_id = $update["message"]["document"]["file_id"];
 
