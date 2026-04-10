@@ -25,6 +25,6 @@ $db_user = "if0_41616616";
 $db_pass = "w7dAl4WNPD";
 
 // REPLACE THIS with your Database Name
-$db_name = "if0_41616616_vaultbot";
+$db_name = "if0_41616616_vault";
 
 ?>
