@@ -15,9 +15,9 @@ $api_url = "https://api.telegram.org/bot".$bot_token;
    DATABASE CONFIGURATION (Railway)
    ============================== */
 
-$db_host = getenv("${{RAILWAY_PRIVATE_DOMAIN}}");
-$db_user = getenv("root");
-$db_pass = getenv("MYSQL_ROOTZOMZTpNOLKNKHbuIdqqpkCXpLLgYwoiQ_PASSWORD");
+$db_host = getenv("mysql.railway.internal");
+$db_user = getenv("mysql://root:ZOMZTpNOLKNKHbuIdqqpkCXpLLgYwoiQ@mysql.railway.internal:3306/railway");
+$db_pass = getenv("ZOMZTpNOLKNKHbuIdqqpkCXpLLgYwoiQ");
 $db_name = getenv("railway");
 
 ?>
