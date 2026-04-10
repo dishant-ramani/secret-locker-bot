@@ -1,5 +1,5 @@
 <?php
 
-require "bot.php";
+echo "Secret Locker Bot Running";
 
 ?>
