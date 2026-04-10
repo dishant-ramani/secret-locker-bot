@@ -1,37 +1,68 @@
 <?php
 
+/*
+================================
+Secret Locker Telegram Bot
+================================
+*/
+
 require_once "config.php";
 require_once "database.php";
 require_once "functions.php";
 
-/* ==============================
-   GET TELEGRAM UPDATE
-   ============================== */
 
-$update = file_get_contents("php://input");
-$update = json_decode($update, TRUE);
+/*
+================================
+Get Telegram Update
+================================
+*/
 
-// Get user info
-$chatId = $update["message"]["chat"]["id"];
-$message = $update["message"]["text"];
+$content = file_get_contents("php://input");
+$update = json_decode($content, true);
 
 
-/* ==============================
-   START COMMAND
-   ============================== */
+/*
+================================
+If opened from browser
+================================
+*/
+
+if(!$update){
+    echo "Bot Running";
+    exit;
+}
+
+
+/*
+================================
+Safe Variables
+================================
+*/
+
+$chatId = $update["message"]["chat"]["id"] ?? "";
+$message = $update["message"]["text"] ?? "";
+
+
+/*
+================================
+START COMMAND
+================================
+*/
 
 if($message == "/start"){
 
-sendMessage($chatId,"🔐 Welcome to Private Vault Bot
+sendMessage($chatId,"🔐 Welcome to Secret Locker Bot
 
-Send 4 digit PIN to create your secure vault");
+Send 4 digit PIN to create vault");
 
 }
 
 
-/* ==============================
-   SET / UPDATE PIN
-   ============================== */
+/*
+================================
+PIN SET
+================================
+*/
 
 if(is_numeric($message) && strlen($message) == 4){
 
@@ -42,97 +73,86 @@ $result = mysqli_query($conn,$query);
 
 if(mysqli_num_rows($result) == 0){
 
-mysqli_query($conn,"INSERT INTO users (telegram_id,pin) 
-VALUES ('$chatId','$pin')");
+mysqli_query($conn,"INSERT INTO users (telegram_id,pin) VALUES ('$chatId','$pin')");
 
-sendMessage($chatId,"✅ Vault Created Successfully
+sendMessage($chatId,"Vault Created 🔐
 
 Use /unlock to open vault");
 
 }else{
 
-mysqli_query($conn,"UPDATE users SET pin='$pin' 
-WHERE telegram_id='$chatId'");
+mysqli_query($conn,"UPDATE users SET pin='$pin' WHERE telegram_id='$chatId'");
 
-sendMessage($chatId,"✅ PIN Updated Successfully");
-
-}
+sendMessage($chatId,"PIN Updated 🔐");
 
 }
 
+}
 
-/* ==============================
-   UNLOCK COMMAND
-   ============================== */
+
+/*
+================================
+Unlock Command
+================================
+*/
 
 if($message == "/unlock"){
 
-sendMessage($chatId,"Enter your PIN");
+sendMessage($chatId,"Enter PIN");
 
 }
 
 
-/* ==============================
-   LOCK COMMAND
-   ============================== */
-
-if($message == "/lock"){
-
-sendMessage($chatId,"🔒 Vault Locked");
-
-}
-
-
-/* ==============================
-   SAVE NOTE COMMAND
-   ============================== */
+/*
+================================
+Save Note
+================================
+*/
 
 if(strpos($message,"/note") === 0){
 
-$note = str_replace("/note","",$message);
+$note = trim(str_replace("/note","",$message));
 
-mysqli_query($conn,"INSERT INTO vault_notes 
-(telegram_id,note) 
-VALUES ('$chatId','$note')");
+mysqli_query($conn,"INSERT INTO vault_notes (telegram_id,note) VALUES ('$chatId','$note')");
 
-sendMessage($chatId,"📝 Note Saved Securely");
+sendMessage($chatId,"Note Saved 🔐");
 
 }
 
 
-/* ==============================
-   PHOTO UPLOAD
-   ============================== */
+/*
+================================
+Photo Upload
+================================
+*/
 
 if(isset($update["message"]["photo"])){
 
 $photo = $update["message"]["photo"];
 $file_id = end($photo)["file_id"];
 
-mysqli_query($conn,"INSERT INTO vault_files 
-(telegram_id,file_id,file_type)
-VALUES 
-('$chatId','$file_id','photo')");
+mysqli_query($conn,"INSERT INTO vault_files (telegram_id,file_id,file_type) 
+VALUES ('$chatId','$file_id','photo')");
 
-sendMessage($chatId,"📷 Photo Saved Securely");
+sendMessage($chatId,"Photo Saved 🔐");
 
 }
 
 
-/* ==============================
-   DOCUMENT UPLOAD
-   ============================== */
+/*
+================================
+Document Upload
+================================
+*/
 
 if(isset($update["message"]["document"])){
 
 $file_id = $update["message"]["document"]["file_id"];
 
-mysqli_query($conn,"INSERT INTO vault_files 
-(telegram_id,file_id,file_type)
-VALUES 
-('$chatId','$file_id','file')");
+mysqli_query($conn,"INSERT INTO vault_files (telegram_id,file_id,file_type) 
+VALUES ('$chatId','$file_id','file')");
 
-sendMessage($chatId,"📁 File Saved Securely");
+sendMessage($chatId,"File Saved 🔐");
 
 }
 
